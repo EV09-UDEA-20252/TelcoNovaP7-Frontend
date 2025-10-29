@@ -100,10 +100,16 @@ export function useAuth() {
 
   const register = async (data: RegisterData) => {
     try {
+
+      const payload = {
+        ...data,
+        rol: "OPERARIO",
+      };
+
       const res = await fetch(`${API_URL}/api/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
+        body: JSON.stringify(payload),
       });
 
       if (!res.ok) return { success: false, message: 'Error en el registro' };
@@ -120,12 +126,21 @@ export function useAuth() {
     localStorage.removeItem('telconova_token');
   };
 
+  const verifyCode = async (code: string) => {
+    if (code === '123456') {
+      return { success: true, message: 'Código verificado correctamente' };
+    } else {
+      return { success: false, message: 'Código incorrecto' };
+    }
+  };
+
   return {
     user,
     isLoading,
     login,
     register,
     logout,
+    verifyCode,
     isAuthenticated: !!user,
   };
 }
