@@ -29,7 +29,6 @@ export default function Clients() {
   });
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
-  // Nuevos estados para listas dinámicas
   const [countries, setCountries] = useState<string[]>([]);
   const [departments, setDepartments] = useState<{ id: number; name: string }[]>([]);
   const [cities, setCities] = useState<{ id: number; name: string }[]>([]);
@@ -48,7 +47,7 @@ export default function Clients() {
     loadCountries();
   }, []);
 
-  // Cargar departamentos solo si el país es Colombia
+  // Cargar departamentos de Colombia
   useEffect(() => {
     const loadDepartments = async () => {
       if (formData.country === 'Colombia') {
@@ -67,7 +66,7 @@ export default function Clients() {
     loadDepartments();
   }, [formData.country]);
 
-  // Cargar ciudades del departamento (solo Colombia)
+  // Cargar ciudades del departamento
   useEffect(() => {
     const loadCities = async () => {
       if (formData.country === 'Colombia' && formData.department) {
@@ -146,16 +145,16 @@ export default function Clients() {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     const validation = validateClientForm(
       formData.name,
       formData.identification,
       formData.phone,
       formData.address
     );
-    
+
     if (!validation.isValid) {
       setErrors(validation.errors);
       return;
@@ -163,15 +162,39 @@ export default function Clients() {
 
     setErrors({});
 
-    if (isEditing && selectedClient) {
-      const updatedClients = clients.map(c => 
-        c.id === selectedClient.id 
-          ? { ...c, ...formData, updatedAt: new Date() }
-          : c
-      );
-      setClients(updatedClients);
-      toast.success('Cliente actualizado exitosamente');
-    } else {
+    const clientData = {
+      nombre: formData.name,
+      identificacion: formData.identification,
+      telefono: formData.phone,
+      pais: formData.country,
+      departamento: formData.department,
+      ciudad: formData.city,
+      direccion: formData.address,
+      email: formData.email
+    };
+
+    const token = localStorage.getItem("telconova_token");
+
+
+    try {
+      const response = await fetch("https://telconova-backend-1.onrender.com/api/clientes", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify(clientData)
+      });
+
+      if (!response.ok) {
+        throw new Error("Error al enviar los datos al servidor");
+      }
+
+      const data = await response.json();
+      console.log("Respuesta del servidor:", data);
+
+      toast.success("Cliente creado exitosamente");
+
       const newClient: Client = {
         id: Date.now().toString(),
         ...formData,
@@ -179,23 +202,25 @@ export default function Clients() {
         updatedAt: new Date()
       };
       setClients([...clients, newClient]);
-      toast.success('Cliente creado exitosamente');
+    } catch (error) {
+      console.error("Error:", error);
+      toast.error("No se pudo enviar el cliente al servidor");
     }
 
     setFormData({
-      name: '',
-      identification: '',
-      phone: '',
-      address: '',
-      email: '',
-      country: '',
-      department: '',
-      city: ''
+      name: "",
+      identification: "",
+      phone: "",
+      address: "",
+      email: "",
+      country: "",
+      department: "",
+      city: ""
     });
     setSelectedClient(null);
     setIsEditing(false);
-    setSearchTerm('');
-    setSearchId('');
+    setSearchTerm("");
+    setSearchId("");
   };
 
   return (
