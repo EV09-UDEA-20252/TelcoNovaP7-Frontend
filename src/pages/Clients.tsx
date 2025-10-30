@@ -21,9 +21,88 @@ export default function Clients() {
     name: '',
     identification: '',
     phone: '',
-    address: ''
+    address: '',
+    email: '',
+    country: '',
+    department: '',
+    city: ''
   });
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
+
+  // Nuevos estados para listas dinámicas
+  const [countries, setCountries] = useState<string[]>([]);
+  const [departments, setDepartments] = useState<{ id: number; name: string }[]>([]);
+  const [cities, setCities] = useState<{ id: number; name: string }[]>([]);
+
+  // Cargar países
+  useEffect(() => {
+    const loadCountries = async () => {
+      try {
+        const res = await fetch('https://countriesnow.space/api/v0.1/countries');
+        const data = await res.json();
+        setCountries(data.data.map((item: any) => item.country));
+      } catch (error) {
+        console.error('Error cargando países:', error);
+      }
+    };
+    loadCountries();
+  }, []);
+
+  // Cargar departamentos solo si el país es Colombia
+  useEffect(() => {
+    const loadDepartments = async () => {
+      if (formData.country === 'Colombia') {
+        try {
+          const res = await fetch('https://api-colombia.com/api/v1/Department');
+          const data = await res.json();
+          setDepartments(data);
+        } catch (error) {
+          console.error('Error cargando departamentos:', error);
+        }
+      } else {
+        setDepartments([]);
+        setCities([]);
+      }
+    };
+    loadDepartments();
+  }, [formData.country]);
+
+  // Cargar ciudades del departamento (solo Colombia)
+  useEffect(() => {
+    const loadCities = async () => {
+      if (formData.country === 'Colombia' && formData.department) {
+        try {
+          const res = await fetch(`https://api-colombia.com/api/v1/Department/${formData.department}/cities`);
+          const data = await res.json();
+          setCities(data);
+        } catch (error) {
+          console.error('Error cargando ciudades:', error);
+        }
+      } else {
+        setCities([]);
+      }
+    };
+    loadCities();
+  }, [formData.department, formData.country]);
+
+  // Manejo de cambios en campos
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    if (name === 'country') {
+      setFormData({ ...formData, country: value, department: '', city: '' });
+      setDepartments([]);
+      setCities([]);
+      return;
+    }
+    if (name === 'department') {
+      setFormData({ ...formData, department: value, city: '' });
+      return;
+    }
+    setFormData({
+      ...formData,
+      [name]: value
+    });
+  };
 
   const handleSearch = () => {
     if (!searchTerm && !searchId) {
@@ -42,7 +121,11 @@ export default function Clients() {
         name: client.name,
         identification: client.identification,
         phone: client.phone,
-        address: client.address
+        address: client.address,
+        email: client.email || '',
+        country: client.country || '',
+        department: client.department || '',
+        city: client.city || ''
       });
       setIsEditing(true);
       toast.success('Cliente encontrado');
@@ -53,17 +136,14 @@ export default function Clients() {
         name: searchTerm,
         identification: searchId,
         phone: '',
-        address: ''
+        address: '',
+        email: '',
+        country: '',
+        department: '',
+        city: ''
       });
       toast.info('Cliente no encontrado. Puede crear uno nuevo.');
     }
-  };
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    });
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -84,7 +164,6 @@ export default function Clients() {
     setErrors({});
 
     if (isEditing && selectedClient) {
-      // Update existing client
       const updatedClients = clients.map(c => 
         c.id === selectedClient.id 
           ? { ...c, ...formData, updatedAt: new Date() }
@@ -93,7 +172,6 @@ export default function Clients() {
       setClients(updatedClients);
       toast.success('Cliente actualizado exitosamente');
     } else {
-      // Create new client
       const newClient: Client = {
         id: Date.now().toString(),
         ...formData,
@@ -104,12 +182,15 @@ export default function Clients() {
       toast.success('Cliente creado exitosamente');
     }
 
-    // Reset form
     setFormData({
       name: '',
       identification: '',
       phone: '',
-      address: ''
+      address: '',
+      email: '',
+      country: '',
+      department: '',
+      city: ''
     });
     setSelectedClient(null);
     setIsEditing(false);
@@ -171,6 +252,8 @@ export default function Clients() {
             </h2>
             
             <form onSubmit={handleSubmit} className="space-y-4">
+          
+
               <Input
                 label="Nombre del cliente"
                 name="name"
@@ -190,6 +273,69 @@ export default function Clients() {
                 placeholder="Solo números"
                 required
               />
+
+              <Input
+                label="Correo electrónico"
+                name="email"
+                value={formData.email}
+                onChange={handleChange}
+                placeholder="correo@ejemplo.com"
+              />
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">País</label>
+                <select
+                  name="country"
+                  value={formData.country}
+                  onChange={handleChange}
+                  className="w-full border rounded-md p-2"
+                >
+                  <option value="">Seleccione un país</option>
+                  {countries.map((c) => (
+                    <option key={c} value={c}>{c}</option>
+                  ))}
+                </select>
+              </div>
+
+              {formData.country === 'Colombia' && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Departamento</label>
+                  <select
+                    name="department"
+                    value={formData.department}
+                    onChange={handleChange}
+                    className="w-full border rounded-md p-2"
+                    disabled={!formData.country}
+                  >
+                    <option value="">Seleccione un departamento</option>
+                    {departments.map((d) => (
+                      <option key={d.id} value={d.id}>{d.name}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Ciudad</label>
+                <select
+                  name="city"
+                  value={formData.city}
+                  onChange={handleChange}
+                  className="w-full border rounded-md p-2"
+                  disabled={
+                    formData.country === 'Colombia'
+                      ? !formData.department
+                      : !formData.country
+                  }
+                >
+                  <option value="">Seleccione una ciudad</option>
+                  {formData.country === 'Colombia'
+                    ? cities.map((c) => (
+                        <option key={c.id} value={c.name}>{c.name}</option>
+                      ))
+                    : formData.country && <option value="Principal">Ciudad principal</option>}
+                </select>
+              </div>
               
               <Input
                 label="Teléfono"
