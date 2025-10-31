@@ -33,7 +33,7 @@ jobs:
             - name: Install vercel Cli
               run: npm install --global vercel@latest
             - name: Pull Vercel Environmental Variables  
-              run: vercel pyll --yes --token=${{ secrets.VERCEL_TOKEN }}
+              run: vercel pull --yes --token=${{ secrets.VERCEL_TOKEN }}
             - name: Trigger Vercel Deployment
               run: vercel deploy --no-wait --token=${{ secrets.VERCEL_TOKEN }}
     Deploy-Production:
