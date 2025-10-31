@@ -23,7 +23,7 @@ jobs:
         name: Deploy to Vercel (Development)
         needs: build
         runs-on: ubuntu-latest
-        if: github.ref == 'refs/heads/develop'
+        if: github.ref == 'refs/heads/integration/cristian'
         steps:
             - uses: actions/checkout@v3
             - name: use Node.js 22
