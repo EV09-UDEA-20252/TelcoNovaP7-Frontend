@@ -28,7 +28,6 @@ export default function OrderNew() {
   const [orderNumber, setOrderNumber] = useState('');
 
   useEffect(() => {
-    // Generate next order number
     const nextNumber = (workOrders.length + 1).toString().padStart(3, '0');
     setOrderNumber(nextNumber);
   }, [workOrders]);
@@ -59,25 +58,75 @@ export default function OrderNew() {
     });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    const validation = validateWorkOrderForm(
-      formData.activity,
-      formData.priority,
-      formData.clientId,
-      formData.description
-    );
-    
-    if (!validation.isValid) {
-      setErrors(validation.errors);
+  const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+
+  const validation = validateWorkOrderForm(
+    formData.activity,
+    formData.priority,
+    formData.clientId,
+    formData.description
+  );
+
+  if (!validation.isValid) {
+    setErrors(validation.errors);
+    return;
+  }
+
+  setErrors({});
+
+  try {
+    const token = localStorage.getItem('telconova_token');
+    if (!token) {
+      toast.error('No se encontró el token de autenticación. Inicia sesión nuevamente.');
       return;
     }
+    
+    const tipoServicioMap: Record<string, number> = {
+      'Instalación': 1,
+      'Reparación': 2,
+      'Mantenimiento': 3
+    };
 
-    setErrors({});
+    const prioridadMap: Record<string, number> = {
+      'Alta': 1,
+      'Media': 2,
+      'Baja': 3
+    };
+
+    const now = new Date();
+    const offsetMs = now.getTimezoneOffset() * 60 * 1000; 
+    const programadaEn = new Date(now.getTime() - offsetMs + 60 * 1000).toISOString(); 
+
+    const body = {
+      idCliente: formData.clientId,
+      idTipoServicio: tipoServicioMap[formData.activity] || 0,
+      idPrioridad: prioridadMap[formData.priority] || 0,
+      descripcion: formData.description,
+      programadaEn
+    };
+
+    const response = await fetch(
+      `https://telconova-backend-1.onrender.com/api/ordenes`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify(body)
+      }
+    );
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Error del servidor: ${errorText}`);
+    }
+
+    const result = await response.json();
 
     const newWorkOrder: WorkOrder = {
-      id: Date.now().toString(),
+      id: result.id || Date.now().toString(),
       orderNumber,
       clientId: formData.clientId,
       activity: formData.activity as 'Instalación' | 'Reparación' | 'Mantenimiento',
@@ -92,7 +141,14 @@ export default function OrderNew() {
     setWorkOrders([...workOrders, newWorkOrder]);
     toast.success(`Orden de trabajo #${orderNumber} creada exitosamente`);
     navigate('/orders');
+  } catch (error) {
+    console.error(error);
+    toast.error('No se pudo crear la orden. Intente nuevamente.');
+  }
   };
+
+
+
 
   return (
     <Layout>
@@ -103,7 +159,7 @@ export default function OrderNew() {
             Crear Orden de Trabajo Nro. {orderNumber}
           </h1>
           <p className="text-gray-600">
-            Responsable: <span className="font-semibold">{user?.name}</span>
+            Responsable: <span className="font-semibold">{user?.nombre}</span>
           </p>
         </div>
 
