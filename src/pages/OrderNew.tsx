@@ -18,6 +18,8 @@ export default function OrderNew() {
   const [clients] = useLocalStorage<Client[]>('telconova_clients', []);
   const [workOrders, setWorkOrders] = useLocalStorage<WorkOrder[]>('telconova_work_orders', []);
   
+  const API_URL = import.meta.env.VITE_API_URL;
+
   const [formData, setFormData] = useState({
     activity: '',
     priority: '',
@@ -107,7 +109,7 @@ export default function OrderNew() {
     };
 
     const response = await fetch(
-      `https://telconova-backend-1.onrender.com/api/ordenes`,
+      `${API_URL}/api/ordenes`,
       {
         method: 'POST',
         headers: {

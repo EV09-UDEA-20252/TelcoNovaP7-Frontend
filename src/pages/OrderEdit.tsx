@@ -16,6 +16,8 @@ export default function OrderEdit() {
   const { user } = useAuth();
   const [workOrders, setWorkOrders] = useLocalStorage<WorkOrder[]>('telconova_work_orders', []);
   const [clients] = useLocalStorage<Client[]>('telconova_clients', []);
+
+  const API_URL = import.meta.env.VITE_API_URL;
   
   const [order, setOrder] = useState<WorkOrder | null>(null);
   const [editData, setEditData] = useState({
@@ -70,7 +72,7 @@ export default function OrderEdit() {
     });
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!order) return;
 
     if (!editData.description.trim()) {
@@ -78,21 +80,67 @@ export default function OrderEdit() {
       return;
     }
 
-    const updatedOrders = workOrders.map(o => 
-      o.id === order.id 
-        ? { 
-            ...o, 
-            activity: editData.activity as 'Instalación' | 'Reparación' | 'Mantenimiento',
-            priority: editData.priority as 'Alta' | 'Media' | 'Baja',
-            status: editData.status as 'Abierta' | 'En progreso' | 'Cerrada',
-            updatedAt: new Date()
-          }
-        : o
-    );
-    
-    setWorkOrders(updatedOrders);
-    toast.success('Orden actualizada exitosamente');
-    navigate('/orders');
+    const token = localStorage.getItem('telconova_token');
+    if (!token) {
+      toast.error('No se encontró el token de autenticación');
+      return;
+    }
+
+    try {
+      const tipoServicioMap: Record<string, number> = {
+        'Instalación': 1,
+        'Reparación': 2,
+        'Mantenimiento': 3
+      };
+
+      const prioridadMap: Record<string, number> = {
+        'Alta': 1,
+        'Media': 2,
+        'Baja': 3
+      };
+
+      const payload = {
+        idCliente: order.clientId,
+        idTipoServicio: tipoServicioMap[editData.activity],
+        idPrioridad: prioridadMap[editData.priority],
+        descripcion: editData.description,
+        programadaEn: new Date().toISOString()
+      };
+
+      const response = await fetch(`${API_URL}/api/ordenes/${order.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify(payload)
+      });
+
+      if (!response.ok) {
+        toast.error('Error al actualizar la orden. Intente nuevamente.');
+        return;
+      }
+
+      const updatedOrders = workOrders.map(o =>
+        o.id === order.id
+          ? {
+              ...o,
+              activity: editData.activity as 'Instalación' | 'Reparación' | 'Mantenimiento',
+              priority: editData.priority as 'Alta' | 'Media' | 'Baja',
+              status: editData.status as 'Abierta' | 'En progreso' | 'Cerrada',
+              description: editData.description,
+              updatedAt: new Date()
+            }
+          : o
+      );
+
+      setWorkOrders(updatedOrders);
+      toast.success('Orden actualizada exitosamente');
+      navigate('/orders');
+    } catch (error) {
+      console.error(error);
+      toast.error('Error al conectar con el servidor.');
+    }
   };
 
   const handleDelete = () => {
@@ -123,7 +171,6 @@ export default function OrderEdit() {
   return (
     <Layout>
       <div className="container-telco py-8">
-        {/* Header */}
         <div className="mb-8">
           <div className="flex items-center mb-4">
             <div className="w-12 h-12 bg-telco-primary rounded-full flex items-center justify-center mr-4">
@@ -131,9 +178,9 @@ export default function OrderEdit() {
             </div>
             <div>
               <h1 className="text-2xl font-bold text-gray-900">
-                {user?.name}
+                {user?.nombre}
               </h1>
-              <p className="text-gray-600">{user?.role}</p>
+              <p className="text-gray-600">{user?.rol}</p>
             </div>
           </div>
           <h2 className="text-3xl font-bold text-gray-900">
@@ -142,38 +189,31 @@ export default function OrderEdit() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Current Information */}
           <Card className="p-6">
             <h3 className="text-xl font-semibold mb-4">Información Actual</h3>
-            
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700">Actividad/Servicio</label>
                 <p className="mt-1 text-gray-900">{order.activity}</p>
               </div>
-              
               <div>
                 <label className="block text-sm font-medium text-gray-700">Prioridad</label>
                 <p className="mt-1 text-gray-900">{order.priority}</p>
               </div>
-              
               <div>
                 <label className="block text-sm font-medium text-gray-700">Estado</label>
                 <p className="mt-1 text-gray-900">{order.status}</p>
               </div>
-              
               <div>
                 <label className="block text-sm font-medium text-gray-700">Descripción Original</label>
                 <p className="mt-1 text-gray-900">{order.description}</p>
               </div>
-              
               <div>
                 <label className="block text-sm font-medium text-gray-700">Fecha de Creación</label>
                 <p className="mt-1 text-gray-600">{formatDate(order.createdAt)}</p>
               </div>
             </div>
 
-            {/* Client Information */}
             {client && (
               <div className="mt-6 p-4 bg-gray-50 rounded-lg">
                 <h4 className="font-semibold mb-2">Cliente</h4>
@@ -185,10 +225,8 @@ export default function OrderEdit() {
             )}
           </Card>
 
-          {/* Edit Information */}
           <Card className="p-6">
             <h3 className="text-xl font-semibold mb-4">Información a Editar</h3>
-            
             <div className="space-y-4">
               <SimpleSelect
                 label="Actividad/Servicio"
@@ -198,7 +236,6 @@ export default function OrderEdit() {
                 options={activityOptions}
                 required
               />
-              
               <SimpleSelect
                 label="Prioridad"
                 name="priority"
@@ -207,7 +244,6 @@ export default function OrderEdit() {
                 options={priorityOptions}
                 required
               />
-              
               <SimpleSelect
                 label="Estado"
                 name="status"
@@ -216,7 +252,6 @@ export default function OrderEdit() {
                 options={statusOptions}
                 required
               />
-              
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Descripción del motivo del cambio
@@ -233,7 +268,6 @@ export default function OrderEdit() {
               </div>
             </div>
 
-            {/* Owner Information */}
             {ownerUser && (
               <div className="mt-6 p-4 bg-blue-50 rounded-lg">
                 <h4 className="font-semibold mb-2">Propietaria de la Orden</h4>
@@ -243,17 +277,12 @@ export default function OrderEdit() {
           </Card>
         </div>
 
-        {/* Actions */}
         <Card className="mt-8 p-6">
           <div className="flex flex-wrap gap-4 justify-center">
-            <Button
-              onClick={handleSave}
-              className="btn-telco-success px-8"
-            >
+            <Button onClick={handleSave} className="btn-telco-success px-8">
               <Save className="w-4 h-4 mr-2" />
               Guardar cambios
             </Button>
-            
             <Button
               onClick={() => setShowDeleteConfirm(true)}
               variant="destructive"
@@ -265,7 +294,6 @@ export default function OrderEdit() {
           </div>
         </Card>
 
-        {/* Delete Confirmation Modal */}
         {showDeleteConfirm && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <Card className="p-6 max-w-md mx-4">
@@ -275,16 +303,10 @@ export default function OrderEdit() {
                 Esta acción no se puede deshacer.
               </p>
               <div className="flex space-x-4 justify-end">
-                <Button
-                  variant="outline"
-                  onClick={() => setShowDeleteConfirm(false)}
-                >
+                <Button variant="outline" onClick={() => setShowDeleteConfirm(false)}>
                   Cancelar
                 </Button>
-                <Button
-                  variant="destructive"
-                  onClick={handleDelete}
-                >
+                <Button variant="destructive" onClick={handleDelete}>
                   Eliminar
                 </Button>
               </div>
