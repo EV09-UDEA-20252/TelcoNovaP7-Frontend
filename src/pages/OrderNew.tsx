@@ -9,13 +9,13 @@ import { Card } from '../components/ui/card';
 import { validateWorkOrderForm } from '../utils/validators';
 import { Client, WorkOrder } from '../types';
 import { toast } from 'sonner';
-import { FileText, Save } from 'lucide-react';
+import { FileText } from 'lucide-react';
 import Layout from '../components/Layout';
 
 export default function OrderNew() {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [clients] = useLocalStorage<Client[]>('telconova_clients', []);
+  const [clients, setClients] = useLocalStorage<Client[]>('telconova_clients', []);
   const [workOrders, setWorkOrders] = useLocalStorage<WorkOrder[]>('telconova_work_orders', []);
   
   const API_URL = import.meta.env.VITE_API_URL;
@@ -28,6 +28,46 @@ export default function OrderNew() {
   });
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [orderNumber, setOrderNumber] = useState('');
+
+  useEffect(() => {
+    const fetchClients = async () => {
+      try {
+        const token = localStorage.getItem('telconova_token');
+        if (!token) {
+          toast.error('No se encontró el token de autenticación. Inicia sesión nuevamente.');
+          return;
+        }
+
+        const response = await fetch(`${API_URL}/api/clientes`, {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        });
+
+        if (!response.ok) {
+          throw new Error(`Error del servidor (${response.status})`);
+        }
+
+        const data = await response.json();
+
+        const parsedClients: Client[] = data.map((c: any) => ({
+          id: c.id,
+          name: c.nombre,
+          identification: c.identificacion,
+          phone: c.telefono,
+          address: c.direccion,
+          email: c.email
+        }));
+
+        setClients(parsedClients);
+      } catch (error) {
+        console.error(error);
+        toast.error('No se pudieron cargar los clientes.');
+      }
+    };
+
+    fetchClients();
+  }, [API_URL, setClients]);
 
   useEffect(() => {
     const nextNumber = (workOrders.length + 1).toString().padStart(3, '0');
@@ -61,101 +101,94 @@ export default function OrderNew() {
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
+    e.preventDefault();
 
-  const validation = validateWorkOrderForm(
-    formData.activity,
-    formData.priority,
-    formData.clientId,
-    formData.description
-  );
+    const validation = validateWorkOrderForm(
+      formData.activity,
+      formData.priority,
+      formData.clientId,
+      formData.description
+    );
 
-  if (!validation.isValid) {
-    setErrors(validation.errors);
-    return;
-  }
-
-  setErrors({});
-
-  try {
-    const token = localStorage.getItem('telconova_token');
-    if (!token) {
-      toast.error('No se encontró el token de autenticación. Inicia sesión nuevamente.');
+    if (!validation.isValid) {
+      setErrors(validation.errors);
       return;
     }
-    
-    const tipoServicioMap: Record<string, number> = {
-      'Instalación': 1,
-      'Reparación': 2,
-      'Mantenimiento': 3
-    };
 
-    const prioridadMap: Record<string, number> = {
-      'Alta': 1,
-      'Media': 2,
-      'Baja': 3
-    };
+    setErrors({});
 
-    const now = new Date();
-    const offsetMs = now.getTimezoneOffset() * 60 * 1000; 
-    const programadaEn = new Date(now.getTime() - offsetMs + 60 * 1000).toISOString(); 
+    try {
+      const token = localStorage.getItem('telconova_token');
+      if (!token) {
+        toast.error('No se encontró el token de autenticación. Inicia sesión nuevamente.');
+        return;
+      }
 
-    const body = {
-      idCliente: formData.clientId,
-      idTipoServicio: tipoServicioMap[formData.activity] || 0,
-      idPrioridad: prioridadMap[formData.priority] || 0,
-      descripcion: formData.description,
-      programadaEn
-    };
+      const tipoServicioMap: Record<string, number> = {
+        'Instalación': 1,
+        'Reparación': 2,
+        'Mantenimiento': 3
+      };
 
-    const response = await fetch(
-      `${API_URL}/api/ordenes`,
-      {
+      const prioridadMap: Record<string, number> = {
+        'Alta': 1,
+        'Media': 2,
+        'Baja': 3
+      };
+
+      const now = new Date();
+      const offsetMs = now.getTimezoneOffset() * 60 * 1000;
+      const programadaEn = new Date(now.getTime() - offsetMs + 60 * 1000).toISOString();
+
+      const body = {
+        idCliente: formData.clientId,
+        idTipoServicio: tipoServicioMap[formData.activity] || 0,
+        idPrioridad: prioridadMap[formData.priority] || 0,
+        descripcion: formData.description,
+        programadaEn
+      };
+
+      const response = await fetch(`${API_URL}/api/ordenes`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`
         },
         body: JSON.stringify(body)
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Error del servidor: ${errorText}`);
       }
-    );
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`Error del servidor: ${errorText}`);
+      const result = await response.json();
+
+      const newWorkOrder: WorkOrder = {
+        id: result.id || Date.now().toString(),
+        orderNumber,
+        clientId: formData.clientId,
+        activity: formData.activity as 'Instalación' | 'Reparación' | 'Mantenimiento',
+        priority: formData.priority as 'Alta' | 'Media' | 'Baja',
+        status: 'Abierta',
+        description: formData.description,
+        responsibleUserId: user!.id,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
+
+      setWorkOrders([...workOrders, newWorkOrder]);
+      toast.success(`Orden de trabajo #${orderNumber} creada exitosamente`);
+      navigate('/orders');
+    } catch (error) {
+      console.error(error);
+      toast.error('No se pudo crear la orden. Intente nuevamente.');
     }
-
-    const result = await response.json();
-
-    const newWorkOrder: WorkOrder = {
-      id: result.id || Date.now().toString(),
-      orderNumber,
-      clientId: formData.clientId,
-      activity: formData.activity as 'Instalación' | 'Reparación' | 'Mantenimiento',
-      priority: formData.priority as 'Alta' | 'Media' | 'Baja',
-      status: 'Abierta',
-      description: formData.description,
-      responsibleUserId: user!.id,
-      createdAt: new Date(),
-      updatedAt: new Date()
-    };
-
-    setWorkOrders([...workOrders, newWorkOrder]);
-    toast.success(`Orden de trabajo #${orderNumber} creada exitosamente`);
-    navigate('/orders');
-  } catch (error) {
-    console.error(error);
-    toast.error('No se pudo crear la orden. Intente nuevamente.');
-  }
   };
-
-
-
 
   return (
     <Layout>
       <div className="container-telco py-8">
-        {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
             Crear Orden de Trabajo Nro. {orderNumber}
@@ -168,7 +201,6 @@ export default function OrderNew() {
         <div className="max-w-4xl mx-auto">
           <Card className="p-8 bg-gray-50">
             <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Activity and Priority */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <SimpleSelect
                   label="Actividad"
@@ -191,7 +223,6 @@ export default function OrderNew() {
                 />
               </div>
 
-              {/* Client Selection */}
               <SimpleSelect
                 label="Cliente"
                 name="clientId"
@@ -202,7 +233,6 @@ export default function OrderNew() {
                 required
               />
 
-              {/* Client Details Display */}
               {selectedClient && (
                 <Card className="p-4 bg-white border-l-4 border-l-telco-success">
                   <h3 className="font-semibold mb-2">Datos del Cliente</h3>
@@ -219,7 +249,6 @@ export default function OrderNew() {
                 </Card>
               )}
 
-              {/* Description */}
               <div className="form-field">
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Descripción del soporte
@@ -240,7 +269,6 @@ export default function OrderNew() {
                 )}
               </div>
 
-              {/* Submit Button */}
               <div className="pt-4">
                 <Button
                   type="submit"
