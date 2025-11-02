@@ -42,7 +42,7 @@ export function validateLoginForm(email: string, password: string): ValidationRe
   };
 }
 
-export function validateRegisterForm(nombre: string, numero_iden: string, email: string, password: string): ValidationResult {
+export function validateRegisterForm(nombre: string, numero_iden: string, email: string, cellphone: string, password: string): ValidationResult {
   const errors: FormErrors = {};
 
   if (!validateRequired(nombre)) errors.nombre = 'El nombre es requerido';

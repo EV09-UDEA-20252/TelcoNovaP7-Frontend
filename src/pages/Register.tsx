@@ -13,6 +13,7 @@ export default function Register() {
       nombre: '',
       numero_iden: '',
       email: '',
+      telefono: '',
       password: ''
   });
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
@@ -35,6 +36,7 @@ export default function Register() {
       formData.nombre,
       formData.numero_iden,
       formData.email,
+      formData.telefono,
       formData.password
     );
     
@@ -103,6 +105,17 @@ export default function Register() {
               onChange={handleChange}
               error={errors.email}
               placeholder="correo@ejemplo.com"
+              required
+            />
+
+            <Input
+              label="Teléfono"
+              name="telefono"
+              type="text"
+              value={formData.telefono}
+              onChange={handleChange}
+              error={errors.telefono}
+              placeholder="310......."
               required
             />
 

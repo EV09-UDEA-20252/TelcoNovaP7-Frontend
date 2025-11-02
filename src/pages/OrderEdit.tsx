@@ -131,9 +131,9 @@ export default function OrderEdit() {
             </div>
             <div>
               <h1 className="text-2xl font-bold text-gray-900">
-                {user?.name}
+                {user?.nombre}
               </h1>
-              <p className="text-gray-600">{user?.role}</p>
+              <p className="text-gray-600">{user?.rol}</p>
             </div>
           </div>
           <h2 className="text-3xl font-bold text-gray-900">

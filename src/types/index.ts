@@ -1,4 +1,8 @@
 export interface Client {
+  city: string;
+  department: string;
+  country: string;
+  email: string;
   id: string;
   name: string;
   identification: string;
