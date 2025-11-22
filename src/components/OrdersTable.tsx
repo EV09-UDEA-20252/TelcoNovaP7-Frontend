@@ -7,12 +7,13 @@ import { Button } from '../components/ui/button';
 import { Card } from '../components/ui/card';
 import { Client, WorkOrder } from '../types';
 import { Edit } from 'lucide-react';
+import { useFetchOrders } from '@/hooks/useFetchOrders';
 
 export default function OrdersTable() {
   const navigate = useNavigate();
-  const [workOrders] = useLocalStorage<WorkOrder[]>('telconova_work_orders', []);
+  const workOrders = useFetchOrders();
   const [clients] = useLocalStorage<Client[]>('telconova_clients', []);
-  
+
   const [searchText, setSearchText] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [typeFilter, setTypeFilter] = useState('');
@@ -50,9 +51,9 @@ export default function OrdersTable() {
   );
 
   const statusOptions = [
-    { value: 'Abierta', label: 'Abierta' },
-    { value: 'En progreso', label: 'En progreso' },
-    { value: 'Cerrada', label: 'Cerrada' }
+    { value: 'ACTIVA', label: 'Activa' },
+    { value: 'EN_PROCESO', label: 'En proceso' },
+    { value: 'CERRADA', label: 'Cerrada' }
   ];
 
   const typeOptions = [
