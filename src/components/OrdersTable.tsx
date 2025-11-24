@@ -57,31 +57,31 @@ export default function OrdersTable() {
   ];
 
   const typeOptions = [
-    { value: 'Instalación', label: 'Instalación' },
-    { value: 'Reparación', label: 'Reparación' },
-    { value: 'Mantenimiento', label: 'Mantenimiento' }
+    { value: 'INSTALACION', label: 'Instalación' },
+    { value: 'REPARACION', label: 'Reparación' },
+    { value: 'MANTENIMIENTO', label: 'Mantenimiento' }
   ];
 
   const priorityOptions = [
-    { value: 'Alta', label: 'Alta' },
-    { value: 'Media', label: 'Media' },
-    { value: 'Baja', label: 'Baja' }
+    { value: 'ALTA', label: 'Alta' },
+    { value: 'MEDIA', label: 'Media' },
+    { value: 'BAJA', label: 'Baja' }
   ];
 
   const getStatusBadge = (status: string) => {
     switch (status) {
-      case 'Abierta': return 'status-open';
-      case 'En progreso': return 'status-progress';
-      case 'Cerrada': return 'status-closed';
+      case 'Activa': return 'status-open';
+      case 'EN_PROCESO': return 'status-progress';
+      case 'CERRADA': return 'status-closed';
       default: return 'status-open';
     }
   };
 
   const getPriorityBadge = (priority: string) => {
     switch (priority) {
-      case 'Alta': return 'priority-high';
-      case 'Media': return 'priority-medium';
-      case 'Baja': return 'priority-low';
+      case 'ALTA': return 'priority-high';
+      case 'MEDIA': return 'priority-medium';
+      case 'BAJA': return 'priority-low';
       default: return 'priority-medium';
     }
   };

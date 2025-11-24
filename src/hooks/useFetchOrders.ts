@@ -8,7 +8,7 @@ export function useFetchOrders() {
     useEffect(() => {
         if (!token) return;
 
-        fetch("http://localhost:8080/api/ordenes", {
+        fetch("https://telconova-backend-1.onrender.com/api/ordenes", {
             headers: {
                 "Authorization": `Bearer ${token}`,
                 "Content-Type": "application/json"
@@ -20,7 +20,7 @@ export function useFetchOrders() {
                     id: o.idOrden,
                     orderNumber: o.nroOrden,
                     clientId: o.idCliente,
-                    client: { id: o.idCliente, name: o.cliente },
+                    client: o.cliente,
                     status: o.estado,
                     priority: o.prioridad,
                     activity: o.tipoServicio,
