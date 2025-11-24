@@ -1,11 +1,20 @@
+// SimpleSelect.tsx
+
 import * as React from 'react';
 import { cn } from '@/lib/utils';
+
+// Exportamos la interfaz de la opción para usarla en otros componentes (como OrdersTable)
+export interface SelectOption {
+  value: string;
+  label: string;
+}
 
 export interface SimpleSelectProps extends React.SelectHTMLAttributes<HTMLSelectElement> {
   error?: string;
   label?: string;
   placeholder?: string;
-  options: Array<{ value: string; label: string }>;
+  // Usamos el tipo SelectOption[]
+  options: SelectOption[];
 }
 
 const SimpleSelect = React.forwardRef<HTMLSelectElement, SimpleSelectProps>(

@@ -75,7 +75,7 @@ export default function OrderEdit() {
     if (!order) return;
 
     if (!editData.description.trim()) {
-      toast.error('Debe proporcionar una descripción del cambio');
+      toast.error('Debe proporcionar una descripción del motivo del cambio');
       return;
     }
 
@@ -86,7 +86,6 @@ export default function OrderEdit() {
         return;
       }
 
-      // Mapear valores al backend
       const tipoServicioMap: Record<string, number> = {
         "Instalación": 1,
         "Reparación": 2,
@@ -99,10 +98,17 @@ export default function OrderEdit() {
         "Baja": 3
       };
 
+      const statusMap: Record<string, number> = {
+        "Abierta": 1,
+        "En progreso": 2,
+        "Cerrada": 3
+      };
+
       const body = {
         idCliente: order.clientId,
         idTipoServicio: tipoServicioMap[editData.activity] ?? 0,
         idPrioridad: prioridadMap[editData.priority] ?? 0,
+        idEstado: statusMap[editData.status] ?? 0,
         descripcion: editData.description,
         programadaEn: new Date().toISOString()
       };
@@ -121,7 +127,6 @@ export default function OrderEdit() {
         throw new Error(err);
       }
 
-      // Si el backend responde bien → actualizamos localStorage
       const updatedOrders = workOrders.map(o =>
         o.id === order.id
           ? {
@@ -129,7 +134,6 @@ export default function OrderEdit() {
             activity: editData.activity as any,
             priority: editData.priority as any,
             status: editData.status as any,
-            description: editData.description,
             updatedAt: new Date()
           }
           : o
@@ -148,6 +152,7 @@ export default function OrderEdit() {
 
   const handleDelete = () => {
     if (!order) return;
+
 
     const updatedOrders = workOrders.filter(o => o.id !== order.id);
     setWorkOrders(updatedOrders);
@@ -215,7 +220,7 @@ export default function OrderEdit() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700">Descripción Original</label>
-                <p className="mt-1 text-gray-900">{order.description}</p>
+                <p className="mt-1 text-gray-900">{order.activity}</p>
               </div>
 
               <div>

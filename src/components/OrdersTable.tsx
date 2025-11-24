@@ -2,12 +2,16 @@ import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import { Input } from '../components/ui/input';
-import { SimpleSelect } from '../components/ui/simple-select';
+import { SimpleSelect, SelectOption } from '../components/ui/simple-select';
 import { Button } from '../components/ui/button';
 import { Card } from '../components/ui/card';
 import { Client, WorkOrder } from '../types';
 import { Edit } from 'lucide-react';
 import { useFetchOrders } from '@/hooks/useFetchOrders';
+
+interface EnrichedWorkOrder extends WorkOrder {
+  client: Client | undefined;
+}
 
 export default function OrdersTable() {
   const navigate = useNavigate();
@@ -22,6 +26,8 @@ export default function OrdersTable() {
   const itemsPerPage = 10;
 
   const enrichedOrders = useMemo(() => {
+    // NOTA: El campo 'client' de la API es un string. 
+    // El campo 'client' de este mapeo es el objeto completo de localStorage.
     return workOrders.map(order => ({
       ...order,
       client: clients.find(c => c.id === order.clientId)
@@ -33,10 +39,14 @@ export default function OrdersTable() {
       const matchesSearch =
         !searchText ||
         order.orderNumber.includes(searchText) ||
+        // Usa 'order.client?.name' para el cliente enriquecido O 'order.client' 
+        // para el nombre que viene directamente de la API si la búsqueda por descripción falla.
         order.client?.name.toLowerCase().includes(searchText.toLowerCase()) ||
-        order.description.toLowerCase().includes(searchText.toLowerCase());
+        (typeof order.client === 'string' && order.client.toLowerCase().includes(searchText.toLowerCase())) ||
+        order.description.toLowerCase().includes(searchText.toLowerCase()); // <--- Usa el nuevo campo 'description'
 
       const matchesStatus = !statusFilter || order.status === statusFilter;
+
       const matchesType = !typeFilter || order.activity === typeFilter;
       const matchesPriority = !priorityFilter || order.priority === priorityFilter;
 
@@ -50,22 +60,22 @@ export default function OrdersTable() {
     currentPage * itemsPerPage
   );
 
-  const statusOptions = [
-    { value: 'ACTIVA', label: 'Activa' },
-    { value: 'EN_PROCESO', label: 'En proceso' },
-    { value: 'CERRADA', label: 'Cerrada' }
+  const statusOptions: SelectOption[] = [
+    { value: 'Abierta', label: 'Abierta' },
+    { value: 'En progreso', label: 'En progreso' },
+    { value: 'Cerrada', label: 'Cerrada' }
   ];
 
-  const typeOptions = [
-    { value: 'INSTALACION', label: 'Instalación' },
-    { value: 'REPARACION', label: 'Reparación' },
-    { value: 'MANTENIMIENTO', label: 'Mantenimiento' }
+  const typeOptions: SelectOption[] = [
+    { value: 'Instalación', label: 'Instalación' },
+    { value: 'Reparación', label: 'Reparación' },
+    { value: 'Mantenimiento', label: 'Mantenimiento' }
   ];
 
-  const priorityOptions = [
-    { value: 'ALTA', label: 'Alta' },
-    { value: 'MEDIA', label: 'Media' },
-    { value: 'BAJA', label: 'Baja' }
+  const priorityOptions: SelectOption[] = [
+    { value: 'Alta', label: 'Alta' },
+    { value: 'Media', label: 'Media' },
+    { value: 'Baja', label: 'Baja' }
   ];
 
   const getStatusBadge = (status: string) => {
