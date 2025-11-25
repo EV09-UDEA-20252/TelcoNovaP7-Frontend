@@ -17,7 +17,7 @@ export default function OrderNew() {
   const navigate = useNavigate();
   const [clients, setClients] = useLocalStorage<Client[]>('telconova_clients', []);
   const [workOrders, setWorkOrders] = useLocalStorage<WorkOrder[]>('telconova_work_orders', []);
-  
+
   const API_URL = import.meta.env.VITE_API_URL;
 
   const [formData, setFormData] = useState({
@@ -67,7 +67,7 @@ export default function OrderNew() {
     };
 
     fetchClients();
-  }, [API_URL, setClients]);
+  }, [API_URL]);
 
   useEffect(() => {
     const nextNumber = (workOrders.length + 1).toString().padStart(3, '0');
@@ -211,7 +211,7 @@ export default function OrderNew() {
                   error={errors.activity}
                   required
                 />
-                
+
                 <SimpleSelect
                   label="Prioridad"
                   name="priority"

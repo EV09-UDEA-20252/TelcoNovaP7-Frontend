@@ -2,17 +2,22 @@ import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import { Input } from '../components/ui/input';
-import { SimpleSelect } from '../components/ui/simple-select';
+import { SimpleSelect, SelectOption } from '../components/ui/simple-select';
 import { Button } from '../components/ui/button';
 import { Card } from '../components/ui/card';
 import { Client, WorkOrder } from '../types';
 import { Edit } from 'lucide-react';
+import { useFetchOrders } from '@/hooks/useFetchOrders';
+
+interface EnrichedWorkOrder extends WorkOrder {
+  client: Client | undefined;
+}
 
 export default function OrdersTable() {
   const navigate = useNavigate();
-  const [workOrders] = useLocalStorage<WorkOrder[]>('telconova_work_orders', []);
+  const workOrders = useFetchOrders();
   const [clients] = useLocalStorage<Client[]>('telconova_clients', []);
-  
+
   const [searchText, setSearchText] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [typeFilter, setTypeFilter] = useState('');
@@ -33,9 +38,11 @@ export default function OrdersTable() {
         !searchText ||
         order.orderNumber.includes(searchText) ||
         order.client?.name.toLowerCase().includes(searchText.toLowerCase()) ||
-        order.description.toLowerCase().includes(searchText.toLowerCase());
+        (typeof order.client === 'string' && order.client.toLowerCase().includes(searchText.toLowerCase())) ||
+        order.description.toLowerCase().includes(searchText.toLowerCase()); // <--- Usa el nuevo campo 'description'
 
       const matchesStatus = !statusFilter || order.status === statusFilter;
+
       const matchesType = !typeFilter || order.activity === typeFilter;
       const matchesPriority = !priorityFilter || order.priority === priorityFilter;
 
@@ -49,19 +56,19 @@ export default function OrdersTable() {
     currentPage * itemsPerPage
   );
 
-  const statusOptions = [
+  const statusOptions: SelectOption[] = [
     { value: 'Abierta', label: 'Abierta' },
     { value: 'En progreso', label: 'En progreso' },
     { value: 'Cerrada', label: 'Cerrada' }
   ];
 
-  const typeOptions = [
+  const typeOptions: SelectOption[] = [
     { value: 'Instalación', label: 'Instalación' },
     { value: 'Reparación', label: 'Reparación' },
     { value: 'Mantenimiento', label: 'Mantenimiento' }
   ];
 
-  const priorityOptions = [
+  const priorityOptions: SelectOption[] = [
     { value: 'Alta', label: 'Alta' },
     { value: 'Media', label: 'Media' },
     { value: 'Baja', label: 'Baja' }
@@ -69,18 +76,18 @@ export default function OrdersTable() {
 
   const getStatusBadge = (status: string) => {
     switch (status) {
-      case 'Abierta': return 'status-open';
-      case 'En progreso': return 'status-progress';
-      case 'Cerrada': return 'status-closed';
+      case 'Activa': return 'status-open';
+      case 'EN_PROCESO': return 'status-progress';
+      case 'CERRADA': return 'status-closed';
       default: return 'status-open';
     }
   };
 
   const getPriorityBadge = (priority: string) => {
     switch (priority) {
-      case 'Alta': return 'priority-high';
-      case 'Media': return 'priority-medium';
-      case 'Baja': return 'priority-low';
+      case 'ALTA': return 'priority-high';
+      case 'MEDIA': return 'priority-medium';
+      case 'BAJA': return 'priority-low';
       default: return 'priority-medium';
     }
   };
