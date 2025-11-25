@@ -152,12 +152,41 @@ export default function OrderEdit() {
     }
   };
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     if (!order) return;
-    const updatedOrders = workOrders.filter(o => o.id !== order.id);
-    setWorkOrders(updatedOrders);
-    toast.success('Orden eliminada exitosamente');
-    navigate('/orders');
+
+    try {
+      const token = localStorage.getItem("telconova_token");
+      if (!token) {
+        toast.error("No se encontró token. Inicia sesión de nuevo.");
+        return;
+      }
+
+      // Petición DELETE al backend: /api/ordenes/{id}
+      const res = await fetch(`${API_URL}/api/ordenes/${order.id}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!res.ok) {
+        const errorText = await res.text();
+        throw new Error(errorText || 'Error al eliminar la orden en el servidor');
+      }
+
+      // Si la API responde correctamente, actualizamos el estado local
+      const updatedOrders = workOrders.filter(o => o.id !== order.id);
+      setWorkOrders(updatedOrders);
+
+      toast.success('Orden eliminada exitosamente');
+      navigate('/orders');
+
+    } catch (error: any) {
+      console.error(error);
+      toast.error('Error al eliminar la orden: ' + error.message);
+    }
   };
 
   const formatDate = (date: Date | string) => {
