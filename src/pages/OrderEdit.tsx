@@ -10,6 +10,13 @@ import { toast } from 'sonner';
 import { Save, Trash2, User } from 'lucide-react';
 import Layout from '../components/Layout';
 
+interface EditState {
+  activity: string;
+  priority: string;
+  status: string;
+  description: string;
+}
+
 export default function OrderEdit() {
   const API_URL = import.meta.env.VITE_API_URL;
   const { id } = useParams<{ id: string }>();
@@ -19,7 +26,7 @@ export default function OrderEdit() {
   const [clients] = useLocalStorage<Client[]>('telconova_clients', []);
 
   const [order, setOrder] = useState<WorkOrder | null>(null);
-  const [editData, setEditData] = useState({
+  const [editData, setEditData] = useState<EditState>({
     activity: '',
     priority: '',
     status: '',
@@ -35,7 +42,7 @@ export default function OrderEdit() {
         activity: foundOrder.activity,
         priority: foundOrder.priority,
         status: foundOrder.status,
-        description: ''
+        description: foundOrder.description
       });
     } else {
       toast.error('Orden no encontrada');
@@ -74,44 +81,38 @@ export default function OrderEdit() {
   const handleSave = async () => {
     if (!order) return;
 
-    if (!editData.description.trim()) {
-      toast.error('Debe proporcionar una descripción del motivo del cambio');
-      return;
-    }
-
     try {
       const token = localStorage.getItem("telconova_token");
       if (!token) {
         toast.error("No se encontró token. Inicia sesión de nuevo.");
         return;
       }
-
       const tipoServicioMap: Record<string, number> = {
         "Instalación": 1,
         "Reparación": 2,
         "Mantenimiento": 3
       };
 
-      const prioridadMap: Record<string, number> = {
-        "Alta": 1,
-        "Media": 2,
-        "Baja": 3
-      };
-
       const statusMap: Record<string, number> = {
         "Abierta": 1,
         "En progreso": 2,
-        "Cerrada": 3
+        "Cerrada": 4
+      };
+
+      const prioridadMap: Record<string, number> = {
+        "Alta": 3,
+        "Media": 2,
+        "Baja": 1
       };
 
       const body = {
-        idCliente: order.clientId,
+        idEstado: statusMap[editData.status] ?? 0,
         idTipoServicio: tipoServicioMap[editData.activity] ?? 0,
         idPrioridad: prioridadMap[editData.priority] ?? 0,
-        idEstado: statusMap[editData.status] ?? 0,
-        descripcion: editData.description,
-        programadaEn: new Date().toISOString()
+        descripcion: editData.description
       };
+
+      console.log("Cuerpo de la solicitud PUT simplificada:", body);
 
       const res = await fetch(`${API_URL}/api/ordenes/${order.id}`, {
         method: "PUT",
@@ -131,9 +132,10 @@ export default function OrderEdit() {
         o.id === order.id
           ? {
             ...o,
-            activity: editData.activity as any,
-            priority: editData.priority as any,
-            status: editData.status as any,
+            activity: editData.activity as WorkOrder['activity'],
+            priority: editData.priority as WorkOrder['priority'],
+            status: editData.status as WorkOrder['status'],
+            description: editData.description,
             updatedAt: new Date()
           }
           : o
@@ -152,8 +154,6 @@ export default function OrderEdit() {
 
   const handleDelete = () => {
     if (!order) return;
-
-
     const updatedOrders = workOrders.filter(o => o.id !== order.id);
     setWorkOrders(updatedOrders);
     toast.success('Orden eliminada exitosamente');

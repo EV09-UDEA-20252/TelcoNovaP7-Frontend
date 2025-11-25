@@ -26,8 +26,6 @@ export default function OrdersTable() {
   const itemsPerPage = 10;
 
   const enrichedOrders = useMemo(() => {
-    // NOTA: El campo 'client' de la API es un string. 
-    // El campo 'client' de este mapeo es el objeto completo de localStorage.
     return workOrders.map(order => ({
       ...order,
       client: clients.find(c => c.id === order.clientId)
@@ -39,8 +37,6 @@ export default function OrdersTable() {
       const matchesSearch =
         !searchText ||
         order.orderNumber.includes(searchText) ||
-        // Usa 'order.client?.name' para el cliente enriquecido O 'order.client' 
-        // para el nombre que viene directamente de la API si la búsqueda por descripción falla.
         order.client?.name.toLowerCase().includes(searchText.toLowerCase()) ||
         (typeof order.client === 'string' && order.client.toLowerCase().includes(searchText.toLowerCase())) ||
         order.description.toLowerCase().includes(searchText.toLowerCase()); // <--- Usa el nuevo campo 'description'
