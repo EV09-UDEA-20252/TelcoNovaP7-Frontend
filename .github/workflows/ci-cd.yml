@@ -8,7 +8,7 @@ jobs:
     build:
         name: Build and Deploy
         runs-on: ubuntu-latest
-        if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/integration/cristian'
+        if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop'
         steps:
             - uses: actions/checkout@v3
             - name: Use Node.js 22
@@ -23,7 +23,7 @@ jobs:
         name: Deploy to Vercel (Development)
         needs: build
         runs-on: ubuntu-latest
-        if: github.ref == 'refs/heads/integration/cristian'
+        if: github.ref == 'refs/heads/develop'
         steps:
             - uses: actions/checkout@v3
             - name: use Node.js 22
@@ -54,3 +54,4 @@ jobs:
             - name: Trigger Vercel Deployment
 
               run: vercel deploy --prod --no-wait --token=${{ secrets.VERCEL_TOKEN }}
+
