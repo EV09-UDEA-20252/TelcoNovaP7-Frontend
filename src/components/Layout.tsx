@@ -51,7 +51,7 @@ export default function Layout({ children, showNavigation = true }: LayoutProps)
     try {
       localStorage.setItem("telconova_dark", darkMode ? "1" : "0");
       localStorage.setItem("telconova_font_pct", String(fontPct));
-    } catch {}
+    } catch { /* empty */ }
   }, [darkMode, fontPct]);
 
   // Cerrar panel si se hace clic fuera
