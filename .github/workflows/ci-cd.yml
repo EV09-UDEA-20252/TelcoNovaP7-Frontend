@@ -64,6 +64,7 @@ jobs:
               -Dsonar.projectKey=telconova_telconovafrontend
               -Dsonar.organization=telconova
               -Dsonar.host.url=https://sonarcloud.io
+              -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info
     build:
         name: Build and Deploy
         runs-on: ubuntu-latest
@@ -113,4 +114,5 @@ jobs:
             - name: Trigger Vercel Deployment
 
               run: vercel deploy --prod --no-wait --token=${{ secrets.VERCEL_TOKEN }}
+
 
