@@ -2,9 +2,8 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { renderHook, act, waitFor } from '@testing-library/react';
 import { useAuth, User, LoginCredentials, RegisterData } from '../hooks/useAuth';
 
-// -----------------------------------------------------
-// Mock fetch
-// -----------------------------------------------------
+//Mocks
+
 beforeEach(() => {
   vi.restoreAllMocks();
   vi.useFakeTimers();
@@ -15,9 +14,6 @@ afterEach(() => {
   localStorage.clear();
 });
 
-// -----------------------------------------------------
-// Datos de prueba
-// -----------------------------------------------------
 const mockUser: User = {
   id: '1',
   nombre: 'Juan',
@@ -27,21 +23,18 @@ const mockUser: User = {
 
 const mockToken = 'mock_token';
 
-// -----------------------------------------------------
-// Suite
-// -----------------------------------------------------
+//Tests
+
 describe('useAuth hook', () => {
   it('login exitoso', async () => {
+    //Arrange and Act
     const credentials: LoginCredentials = { email: 'test@mail.com', password: '1234' };
 
-    // Mock login
     vi.stubGlobal('fetch', vi.fn()
-      // primera llamada: /login
       .mockResolvedValueOnce({
         ok: true,
         json: async () => ({ accessToken: mockToken }),
       })
-      // segunda llamada: /me
       .mockResolvedValueOnce({
         ok: true,
         json: async () => mockUser,
@@ -52,6 +45,7 @@ describe('useAuth hook', () => {
 
     const response = await act(async () => result.current.login(credentials));
 
+    //Assert
     expect(response.success).toBe(true);
     expect(result.current.user).toEqual(mockUser);
     expect(localStorage.getItem('telconova_token')).toBe(mockToken);
@@ -59,6 +53,7 @@ describe('useAuth hook', () => {
   });
 
   it('login falla por credenciales inválidas', async () => {
+    //Arrange and Act
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
       ok: false,
       json: async () => ({ message: 'Error' }),
@@ -70,11 +65,13 @@ describe('useAuth hook', () => {
       result.current.login({ email: 'x', password: 'y' })
     );
 
+    //Assert
     expect(response.success).toBe(false);
     expect(result.current.user).toBeNull();
   });
 
   it('register exitoso', async () => {
+    //Arrange and Act
     const data: RegisterData = {
       nombre: 'Juan',
       email: 'juan@mail.com',
@@ -91,33 +88,43 @@ describe('useAuth hook', () => {
 
     const response = await act(async () => result.current.register(data));
 
+    //Assert
     expect(response.success).toBe(true);
   });
 
   it('logout limpia usuario y localStorage', () => {
+    //Arrange
     localStorage.setItem('telconova_token', mockToken);
     localStorage.setItem('telconova_user', JSON.stringify(mockUser));
 
     const { result } = renderHook(() => useAuth());
 
+    //Act
     act(() => result.current.logout());
 
+    //Assert
     expect(result.current.user).toBeNull();
     expect(localStorage.getItem('telconova_token')).toBeNull();
     expect(localStorage.getItem('telconova_user')).toBeNull();
   });
 
   it('verifyCode devuelve success=true con código correcto', async () => {
+    //Arrange and Act
     const { result } = renderHook(() => useAuth());
 
     const response = await act(async () => result.current.verifyCode('123456'));
+
+    //Assert
     expect(response.success).toBe(true);
   });
 
   it('verifyCode devuelve success=false con código incorrecto', async () => {
+    //Arrange and Act
     const { result } = renderHook(() => useAuth());
 
     const response = await act(async () => result.current.verifyCode('000000'));
+
+    //Assert
     expect(response.success).toBe(false);
   });
 });
