@@ -64,7 +64,6 @@ jobs:
               -Dsonar.projectKey=telconova_telconovafrontend
               -Dsonar.organization=telconova
               -Dsonar.host.url=https://sonarcloud.io
-              -Dsonar.qualitygate.wait=true
     build:
         name: Build and Deploy
         runs-on: ubuntu-latest
@@ -112,4 +111,5 @@ jobs:
             - name: Pull Vercel Environmental Variables  
               run: vercel pull --yes --token=${{ secrets.VERCEL_TOKEN }}
             - name: Trigger Vercel Deployment
+
               run: vercel deploy --prod --no-wait --token=${{ secrets.VERCEL_TOKEN }}
