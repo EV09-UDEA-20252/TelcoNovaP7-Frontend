@@ -25,7 +25,7 @@ jobs:
             run: npm ci
 
           - name: Run unit tests (Vitest)
-            run: npx vitest --run
+            run: npx vitest --run --coverage
     sonar:
       name: SonarCloud
       runs-on: ubuntu-latest
@@ -114,5 +114,6 @@ jobs:
             - name: Trigger Vercel Deployment
 
               run: vercel deploy --prod --no-wait --token=${{ secrets.VERCEL_TOKEN }}
+
 
 
