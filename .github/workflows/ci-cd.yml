@@ -36,6 +36,12 @@ jobs:
         # OPCIONAL para debug:
         continue-on-error: true
 
+      - name: List coverage files
+        run: |
+          echo "Buscando carpeta coverage..."
+          ls -la
+          ls -R coverage || echo "No se encontró la carpeta coverage"
+
       - name: Cache Sonar cache
         uses: actions/cache@v4
         with:
@@ -103,6 +109,7 @@ jobs:
             - name: Trigger Vercel Deployment
 
               run: vercel deploy --prod --no-wait --token=${{ secrets.VERCEL_TOKEN }}
+
 
 
 
