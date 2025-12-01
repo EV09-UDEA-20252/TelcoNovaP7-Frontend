@@ -27,8 +27,9 @@ export default defineConfig(({ mode }) => ({
     exclude: [...configDefaults.exclude],
     coverage: {
       provider: "v8",
-      reporter: ["text", "html", "lcov"],
+      reporter: ["lcov", "json"],
       reportsDirectory: './coverage' 
     }
   }
 }));
+
