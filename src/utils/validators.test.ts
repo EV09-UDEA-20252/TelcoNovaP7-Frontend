@@ -11,6 +11,8 @@ import {
   validateWorkOrderForm
 } from './validators'
 
+//Tests
+
 describe('Validators Unit Tests', () => {
   describe('validateEmail', () => {
     it('debe validar emails correctos', () => {
@@ -40,39 +42,39 @@ describe('Validators Unit Tests', () => {
 
     it('debe rechazar teléfonos incorrectos', () => {
       expect(validatePhone('')).toBe(false)
-      expect(validatePhone('123')).toBe(false) // Muy corto
-      expect(validatePhone('abc')).toBe(false) // No números
-      expect(validatePhone('300-123-456')).toBe(true) // 9 dígitos
+      expect(validatePhone('123')).toBe(false)
+      expect(validatePhone('abc')).toBe(false)
+      expect(validatePhone('300-123-456')).toBe(true)
     })
   })
 
   describe('validateIdentification', () => {
     it('debe validar identificaciones correctas', () => {
-      expect(validateIdentification('123456')).toBe(true) // Mínimo 6
+      expect(validateIdentification('123456')).toBe(true)
       expect(validateIdentification('1234567890')).toBe(true)
       expect(validateIdentification('987654321')).toBe(true)
     })
 
     it('debe rechazar identificaciones incorrectas', () => {
       expect(validateIdentification('')).toBe(false)
-      expect(validateIdentification('12345')).toBe(false) // Menos de 6
-      expect(validateIdentification('abc123')).toBe(false) // Letras
-      expect(validateIdentification('12.345.678')).toBe(false) // Puntos
-      expect(validateIdentification('12-345-678')).toBe(false) // Guiones
+      expect(validateIdentification('12345')).toBe(false)
+      expect(validateIdentification('abc123')).toBe(false)
+      expect(validateIdentification('12.345.678')).toBe(false)
+      expect(validateIdentification('12-345-678')).toBe(false)
     })
   })
 
   describe('validatePassword', () => {
     it('debe validar contraseñas correctas', () => {
-      expect(validatePassword('12345678')).toBe(true) // 8 caracteres
+      expect(validatePassword('12345678')).toBe(true)
       expect(validatePassword('password123')).toBe(true)
       expect(validatePassword('P@ssw0rd!')).toBe(true)
-      expect(validatePassword('a'.repeat(20))).toBe(true) // Larga
+      expect(validatePassword('a'.repeat(20))).toBe(true)
     })
 
     it('debe rechazar contraseñas incorrectas', () => {
       expect(validatePassword('')).toBe(false)
-      expect(validatePassword('1234567')).toBe(false) // 7 caracteres
+      expect(validatePassword('1234567')).toBe(false)
       expect(validatePassword('short')).toBe(false)
     })
   })
@@ -80,28 +82,32 @@ describe('Validators Unit Tests', () => {
   describe('validateRequired', () => {
     it('debe validar valores requeridos', () => {
       expect(validateRequired('texto')).toBe(true)
-      expect(validateRequired(' a ')).toBe(true) // Con espacios
+      expect(validateRequired(' a ')).toBe(true)
       expect(validateRequired('123')).toBe(true)
     })
 
     it('debe rechazar valores vacíos', () => {
       expect(validateRequired('')).toBe(false)
-      expect(validateRequired('   ')).toBe(false) // Solo espacios
-      expect(validateRequired('\t\n')).toBe(false) // Whitespace
+      expect(validateRequired('   ')).toBe(false)
+      expect(validateRequired('\t\n')).toBe(false)
     })
   })
 
   describe('validateLoginForm', () => {
     it('debe validar formulario de login correcto', () => {
+      //Arrange + Act
       const result = validateLoginForm('test@example.com', 'password123')
       
+      //Assert
       expect(result.isValid).toBe(true)
       expect(result.errors).toEqual({})
     })
 
     it('debe rechazar email vacío', () => {
+      //Arrange + Act
       const result = validateLoginForm('', 'password123')
       
+      //Assert
       expect(result.isValid).toBe(false)
       expect(result.errors).toEqual({
         email: 'El email es requerido'
@@ -109,8 +115,10 @@ describe('Validators Unit Tests', () => {
     })
 
     it('debe rechazar email inválido', () => {
+      //Arrange + Act
       const result = validateLoginForm('invalid-email', 'password123')
       
+      //Assert
       expect(result.isValid).toBe(false)
       expect(result.errors).toEqual({
         email: 'Email inválido'
@@ -118,8 +126,10 @@ describe('Validators Unit Tests', () => {
     })
 
     it('debe rechazar contraseña vacía', () => {
+      //Arrange + Act
       const result = validateLoginForm('test@example.com', '')
       
+      //Assert
       expect(result.isValid).toBe(false)
       expect(result.errors).toEqual({
         password: 'La contraseña es requerida'
@@ -127,8 +137,10 @@ describe('Validators Unit Tests', () => {
     })
 
     it('debe mostrar múltiples errores', () => {
+      //Arrange + Act
       const result = validateLoginForm('', '')
       
+      //Assert
       expect(result.isValid).toBe(false)
       expect(result.errors).toEqual({
         email: 'El email es requerido',
@@ -147,6 +159,7 @@ describe('Validators Unit Tests', () => {
     }
 
     it('debe validar formulario de registro correcto', () => {
+      //Arrange + Act
       const result = validateRegisterForm(
         validData.nombre,
         validData.numero_iden,
@@ -155,11 +168,13 @@ describe('Validators Unit Tests', () => {
         validData.password
       )
       
+      //Assert
       expect(result.isValid).toBe(true)
       expect(result.errors).toEqual({})
     })
 
     it('debe rechazar nombre vacío', () => {
+      //Arrange + Act
       const result = validateRegisterForm(
         '',
         validData.numero_iden,
@@ -168,11 +183,13 @@ describe('Validators Unit Tests', () => {
         validData.password
       )
       
+      //Assert
       expect(result.isValid).toBe(false)
       expect(result.errors.nombre).toBe('El nombre es requerido')
     })
 
     it('debe rechazar identificación vacía', () => {
+      //Arrange + Act
       const result = validateRegisterForm(
         validData.nombre,
         '',
@@ -181,11 +198,13 @@ describe('Validators Unit Tests', () => {
         validData.password
       )
       
+      //Assert
       expect(result.isValid).toBe(false)
       expect(result.errors.numero_iden).toBe('El número de identificación es requerido')
     })
 
     it('debe rechazar email inválido', () => {
+      //Arrange + Act
       const result = validateRegisterForm(
         validData.nombre,
         validData.numero_iden,
@@ -194,11 +213,13 @@ describe('Validators Unit Tests', () => {
         validData.password
       )
       
+      //Assert
       expect(result.isValid).toBe(false)
       expect(result.errors.email).toBe('Email inválido')
     })
 
     it('debe rechazar contraseña corta', () => {
+      //Arrange + Act
       const result = validateRegisterForm(
         validData.nombre,
         validData.numero_iden,
@@ -207,13 +228,16 @@ describe('Validators Unit Tests', () => {
         '123'
       )
       
+      //Assert
       expect(result.isValid).toBe(false)
       expect(result.errors.password).toBe('La contraseña debe tener al menos 8 caracteres')
     })
 
     it('debe mostrar todos los errores simultáneamente', () => {
+      //Arrange + Act
       const result = validateRegisterForm('', '', '', '', '')
       
+      //Assert
       expect(result.isValid).toBe(false)
       expect(result.errors).toEqual({
         nombre: 'El nombre es requerido',
@@ -233,6 +257,7 @@ describe('Validators Unit Tests', () => {
     }
 
     it('debe validar formulario de cliente correcto', () => {
+      //Arrange + Act
       const result = validateClientForm(
         validData.name,
         validData.identification,
@@ -240,11 +265,13 @@ describe('Validators Unit Tests', () => {
         validData.address
       )
       
+      //Assert
       expect(result.isValid).toBe(true)
       expect(result.errors).toEqual({})
     })
 
     it('debe rechazar nombre vacío', () => {
+      //Arrange + Act
       const result = validateClientForm(
         '',
         validData.identification,
@@ -252,11 +279,13 @@ describe('Validators Unit Tests', () => {
         validData.address
       )
       
+      //Assert
       expect(result.isValid).toBe(false)
       expect(result.errors.name).toBe('El nombre es requerido')
     })
 
     it('debe rechazar identificación vacía', () => {
+      //Arrange + Act
       const result = validateClientForm(
         validData.name,
         '',
@@ -264,18 +293,21 @@ describe('Validators Unit Tests', () => {
         validData.address
       )
       
+      //Assert
       expect(result.isValid).toBe(false)
       expect(result.errors.identification).toBe('La identificación es requerida')
     })
 
     it('debe rechazar identificación inválida', () => {
+      //Arrange + Act
       const result = validateClientForm(
         validData.name,
-        'abc123', // Letras no permitidas
+        'abc123',
         validData.phone,
         validData.address
       )
       
+      //Assert
       expect(result.isValid).toBe(false)
       expect(result.errors.identification).toBe(
         'La identificación debe contener solo números y al menos 6 dígitos'
@@ -283,13 +315,15 @@ describe('Validators Unit Tests', () => {
     })
 
     it('debe rechazar identificación corta', () => {
+      //Arrange + Act
       const result = validateClientForm(
         validData.name,
-        '12345', // 5 dígitos
+        '12345',
         validData.phone,
         validData.address
       )
       
+      //Assert
       expect(result.isValid).toBe(false)
       expect(result.errors.identification).toBe(
         'La identificación debe contener solo números y al menos 6 dígitos'
@@ -297,6 +331,7 @@ describe('Validators Unit Tests', () => {
     })
 
     it('debe rechazar teléfono vacío', () => {
+      //Arrange + Act
       const result = validateClientForm(
         validData.name,
         validData.identification,
@@ -304,11 +339,13 @@ describe('Validators Unit Tests', () => {
         validData.address
       )
       
+      //Assert
       expect(result.isValid).toBe(false)
       expect(result.errors.phone).toBe('El teléfono es requerido')
     })
 
     it('debe rechazar teléfono inválido', () => {
+      //Arrange + Act
       const result = validateClientForm(
         validData.name,
         validData.identification,
@@ -316,11 +353,13 @@ describe('Validators Unit Tests', () => {
         validData.address
       )
       
+      //Assert
       expect(result.isValid).toBe(false)
       expect(result.errors.phone).toBe('Formato de teléfono inválido')
     })
 
     it('debe rechazar dirección vacía', () => {
+      //Arrange + Act
       const result = validateClientForm(
         validData.name,
         validData.identification,
@@ -328,6 +367,7 @@ describe('Validators Unit Tests', () => {
         ''
       )
       
+      //Assert
       expect(result.isValid).toBe(false)
       expect(result.errors.address).toBe('La dirección es requerida')
     })
@@ -342,6 +382,7 @@ describe('Validators Unit Tests', () => {
     }
 
     it('debe validar orden de trabajo correcta', () => {
+      //Arrange + Act
       const result = validateWorkOrderForm(
         validData.activity,
         validData.priority,
@@ -349,11 +390,13 @@ describe('Validators Unit Tests', () => {
         validData.description
       )
       
+      //Assert
       expect(result.isValid).toBe(true)
       expect(result.errors).toEqual({})
     })
 
     it('debe rechazar actividad vacía', () => {
+      //Arrange + Act
       const result = validateWorkOrderForm(
         '',
         validData.priority,
@@ -361,11 +404,13 @@ describe('Validators Unit Tests', () => {
         validData.description
       )
       
+      //Assert
       expect(result.isValid).toBe(false)
       expect(result.errors.activity).toBe('La actividad es requerida')
     })
 
     it('debe rechazar prioridad vacía', () => {
+      //Arrange + Act
       const result = validateWorkOrderForm(
         validData.activity,
         '',
@@ -373,11 +418,13 @@ describe('Validators Unit Tests', () => {
         validData.description
       )
       
+      //Assert
       expect(result.isValid).toBe(false)
       expect(result.errors.priority).toBe('La prioridad es requerida')
     })
 
     it('debe rechazar cliente no seleccionado', () => {
+      //Arrange + Act
       const result = validateWorkOrderForm(
         validData.activity,
         validData.priority,
@@ -385,11 +432,13 @@ describe('Validators Unit Tests', () => {
         validData.description
       )
       
+      //Assert
       expect(result.isValid).toBe(false)
       expect(result.errors.clientId).toBe('Debe seleccionar un cliente')
     })
 
     it('debe rechazar descripción vacía', () => {
+      //Arrange + Act
       const result = validateWorkOrderForm(
         validData.activity,
         validData.priority,
@@ -397,13 +446,16 @@ describe('Validators Unit Tests', () => {
         ''
       )
       
+      //Assert
       expect(result.isValid).toBe(false)
       expect(result.errors.description).toBe('La descripción es requerida')
     })
 
     it('debe mostrar múltiples errores', () => {
+      //Arrange + Act
       const result = validateWorkOrderForm('', '', '', '')
       
+      //Assert
       expect(result.isValid).toBe(false)
       expect(result.errors).toEqual({
         activity: 'La actividad es requerida',
@@ -484,7 +536,10 @@ describe('Validators Unit Tests', () => {
       })
 
       it('debe rechazar formulario con espacios en blanco', () => {
+        //Arrange + Act
         const result = validateLoginForm('   ', '   ')
+
+        //Assert
         expect(result.isValid).toBe(false)
         expect(result.errors.email).toBe('El email es requerido')
         expect(result.errors.password).toBe('La contraseña es requerida')

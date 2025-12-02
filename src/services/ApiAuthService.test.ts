@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { ApiAuthService } from './ApiAuthService'
 
-// Mock de fetch y localStorage
+//Mocks
 const mockFetch = vi.fn()
 const mockLocalStorage = {
   getItem: vi.fn(),
@@ -14,19 +14,14 @@ describe('ApiAuthService', () => {
   let authService: ApiAuthService
 
   beforeEach(() => {
-    // Mock global fetch
     global.fetch = mockFetch
-    
-    // Mock localStorage
     Object.defineProperty(window, 'localStorage', {
       value: mockLocalStorage,
       writable: true,
     })
 
-    // Mock de import.meta.env
     vi.stubEnv('VITE_API_URL', 'http://localhost:3000')
 
-    // Limpiar todos los mocks antes de cada test
     vi.clearAllMocks()
     authService = new ApiAuthService()
   })
@@ -35,12 +30,14 @@ describe('ApiAuthService', () => {
     vi.restoreAllMocks()
   })
 
+  //Tests
+
   describe('login', () => {
     const mockEmail = 'test@example.com'
     const mockPassword = 'password123'
 
     it('debe realizar login exitoso y guardar token en localStorage', async () => {
-      // Arrange
+      //Arrange
       const mockResponse = {
         accessToken: 'fake-token-123',
         user: { id: 1, email: mockEmail, name: 'Test User' },
@@ -51,10 +48,10 @@ describe('ApiAuthService', () => {
         json: async () => mockResponse,
       } as Response)
 
-      // Act
+      //Act
       const result = await authService.login(mockEmail, mockPassword)
 
-      // Assert
+      //Assert
       expect(mockFetch).toHaveBeenCalledWith(
         'http://localhost:3000/api/auth/login',
         {
@@ -81,17 +78,17 @@ describe('ApiAuthService', () => {
     })
 
     it('debe manejar error de credenciales incorrectas', async () => {
-      // Arrange
+      //Arrange
       const errorMessage = 'Credenciales inválidas'
       mockFetch.mockResolvedValueOnce({
         ok: false,
         json: async () => ({ message: errorMessage }),
       } as Response)
 
-      // Act
+      //Act
       const result = await authService.login(mockEmail, mockPassword)
 
-      // Assert
+      //Assert
       expect(result).toEqual({
         success: false,
         message: errorMessage,
@@ -100,13 +97,13 @@ describe('ApiAuthService', () => {
     })
 
     it('debe manejar error de conexión', async () => {
-      // Arrange
+      //Arrange
       mockFetch.mockRejectedValueOnce(new Error('Network error'))
 
-      // Act
+      //Act
       const result = await authService.login(mockEmail, mockPassword)
 
-      // Assert
+      //Assert
       expect(result).toEqual({
         success: false,
         message: 'Error de conexión',
@@ -115,16 +112,16 @@ describe('ApiAuthService', () => {
     })
 
     it('debe usar mensaje por defecto cuando no hay mensaje en respuesta de error', async () => {
-      // Arrange
+      //Arrange
       mockFetch.mockResolvedValueOnce({
         ok: false,
         json: async () => ({}),
       } as Response)
 
-      // Act
+      //Act
       const result = await authService.login(mockEmail, mockPassword)
 
-      // Assert
+      //Assert
       expect(result).toEqual({
         success: false,
         message: 'Error en el inicio de sesión',
